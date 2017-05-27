@@ -18,6 +18,7 @@ class Backend : public Nan::ObjectWrap
   protected:
     int width;
     int height;
+    int density;
     cairo_surface_t* surface = nullptr;
     Canvas* canvas = nullptr;
 
@@ -51,6 +52,9 @@ class Backend : public Nan::ObjectWrap
 
     bool isSurfaceValid();
     inline const char* getError(){ return error; }
+
+    DLL_PUBLIC getDensity();
+    virtual void setDensity(int ppi);
 };
 
 

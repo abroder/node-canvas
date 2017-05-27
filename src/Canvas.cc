@@ -68,6 +68,7 @@ Canvas::Initialize(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
   SetProtoAccessor(proto, Nan::New("stride").ToLocalChecked(), GetStride, NULL, ctor);
   SetProtoAccessor(proto, Nan::New("width").ToLocalChecked(), GetWidth, SetWidth, ctor);
   SetProtoAccessor(proto, Nan::New("height").ToLocalChecked(), GetHeight, SetHeight, ctor);
+  SetProtoAccessor(proto, Nan::New("density").ToLocalChecked(), GetDensity, SetDensity, ctor);
 
   Nan::SetTemplate(proto, "PNG_NO_FILTERS", Nan::New<Uint32>(PNG_NO_FILTERS));
   Nan::SetTemplate(proto, "PNG_FILTER_NONE", Nan::New<Uint32>(PNG_FILTER_NONE));
@@ -193,6 +194,25 @@ NAN_SETTER(Canvas::SetHeight) {
   if (value->IsNumber()) {
     Canvas *canvas = Nan::ObjectWrap::Unwrap<Canvas>(info.This());
     canvas->backend()->setHeight(Nan::To<uint32_t>(value).FromMaybe(0));
+    canvas->resurface(info.This());
+  }
+}
+
+/*
+ * Get density in pixels per inch
+ */
+NAN_GETTER(Canvas::GetDensity) {
+  Canvas *canvas = Nan::ObjectWrap::Unwrap<Canvas>(info.This());
+  info.GetReturnValue().Set(Nan::New<Number>(canvas->getDensity()));
+}
+
+/*
+ * Set density in pixels per inch
+ */
+NAN_SETTER(Canvas::SetDensity) {
+  if (value->IsNumber()) {
+    Canvas *canvas = Nan::ObjectWrap::Unwrap<Canvas>(info.This());
+    canvas->backend()->setDensity(value->Uint32Value());
     canvas->resurface(info.This());
   }
 }

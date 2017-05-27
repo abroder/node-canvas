@@ -45,6 +45,8 @@ class Canvas: public Nan::ObjectWrap {
     static NAN_GETTER(GetHeight);
     static NAN_SETTER(SetWidth);
     static NAN_SETTER(SetHeight);
+    static NAN_SETTER(SetDensity);
+    static NAN_GETTER(GetDensity);
     static NAN_METHOD(StreamPNGSync);
     static NAN_METHOD(StreamPDFSync);
     static NAN_METHOD(StreamJPEGSync);
@@ -67,6 +69,7 @@ class Canvas: public Nan::ObjectWrap {
 
     DLL_PUBLIC inline int getWidth() { return backend()->getWidth(); }
     DLL_PUBLIC inline int getHeight() { return backend()->getHeight(); }
+    DLL_PUBLIC inline int getDensity() { return backend()->getDensity(); }
 
     Canvas(Backend* backend);
     void resurface(v8::Local<v8::Object> canvas);

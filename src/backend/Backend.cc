@@ -5,6 +5,7 @@ Backend::Backend(std::string name, int width, int height)
   : name(name)
   , width(width)
   , height(height)
+  , density(0)
 {}
 
 Backend::~Backend()
@@ -94,6 +95,15 @@ bool Backend::isSurfaceValid(){
   return isValid;
 }
 
+
+int Backend::getDensity()
+{
+	return this->density;
+}
+void Backend::setDensity(int density_)
+{
+	this->density = density_;
+}
 
 BackendOperationNotAvailable::BackendOperationNotAvailable(Backend* backend,
   std::string operation_name)

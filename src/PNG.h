@@ -105,7 +105,7 @@ static cairo_status_t canvas_write_png(cairo_surface_t *surface, png_rw_ptr writ
     int bpc;
     unsigned int width = cairo_image_surface_get_width(surface);
     unsigned int height = cairo_image_surface_get_height(surface);
-    unsigned int density = ((closure_t *) ((canvas_png_write_closure_t *) closure)->closure)->canvas->getDensity();
+    unsigned int density = ((closure_t *) ((canvas_png_write_closure_t *) closure))->density;
 
     data = cairo_image_surface_get_data(surface);
     if (data == NULL) {

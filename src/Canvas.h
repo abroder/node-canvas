@@ -77,4 +77,5 @@ class Canvas: public Nan::ObjectWrap {
   private:
     ~Canvas();
     Backend* _backend;
+    int density;
 };

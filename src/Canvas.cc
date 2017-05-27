@@ -203,7 +203,7 @@ NAN_SETTER(Canvas::SetHeight) {
  */
 NAN_GETTER(Canvas::GetDensity) {
   Canvas *canvas = Nan::ObjectWrap::Unwrap<Canvas>(info.This());
-  info.GetReturnValue().Set(Nan::New<Number>(canvas->getDensity()));
+  info.GetReturnValue().Set(Nan::New<Number>(canvas->density));
 }
 
 /*
@@ -212,7 +212,7 @@ NAN_GETTER(Canvas::GetDensity) {
 NAN_SETTER(Canvas::SetDensity) {
   if (value->IsNumber()) {
     Canvas *canvas = Nan::ObjectWrap::Unwrap<Canvas>(info.This());
-    canvas->backend()->setDensity(value->Uint32Value());
+    canvas->density = value->Uint32Value();
     canvas->resurface(info.This());
   }
 }
@@ -476,6 +476,7 @@ NAN_METHOD(Canvas::ToBuffer) {
   // Async PNG
   if (info[0]->IsFunction() &&
     (info[1]->IsUndefined() || info[1]->StrictEquals(Nan::New<String>("image/png").ToLocalChecked()))) {
+    status = closure_init(closure, canvas, compression_level, filter, canvas->density);
 
     PngClosure* closure;
     try {

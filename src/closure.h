@@ -22,6 +22,7 @@ struct Closure {
   Nan::Callback cb;
   Canvas* canvas = nullptr;
   cairo_status_t status = CAIRO_STATUS_SUCCESS;
+  uint32_t density;
 
   static cairo_status_t writeVec(void *c, const uint8_t *odata, unsigned len) {
     Closure* closure = static_cast<Closure*>(c);

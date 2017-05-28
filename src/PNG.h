@@ -105,7 +105,7 @@ static cairo_status_t canvas_write_png(cairo_surface_t *surface, png_rw_ptr writ
     int bpc;
     unsigned int width = cairo_image_surface_get_width(surface);
     unsigned int height = cairo_image_surface_get_height(surface);
-    unsigned int density = ((closure_t *) ((canvas_png_write_closure_t *) closure))->density;
+    unsigned int density = ((closure_t *) ((canvas_png_write_closure_t *) closure)->closure)->density;
 
     data = cairo_image_surface_get_data(surface);
     if (data == NULL) {
@@ -152,7 +152,9 @@ static cairo_status_t canvas_write_png(cairo_surface_t *surface, png_rw_ptr writ
     }
 
     if (density > 0) {
-        png_set_pHYs(png, info, density * 39, density * 39, 0);
+        float ppm_f = density * 39.37;
+        int ppm_i = (int) floor(ppm_f);
+        png_set_pHYs(png, info, ppm_i, ppm_i, PNG_RESOLUTION_METER);
     }
 
 #ifdef PNG_SETJMP_SUPPORTED

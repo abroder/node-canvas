@@ -668,20 +668,12 @@ NAN_METHOD(Canvas::StreamPDFSync) {
 
   cairo_surface_finish(canvas->surface());
 
-<<<<<<< HEAD
   PdfSvgClosure* closure = static_cast<PdfBackend*>(canvas->backend())->closure();
   Local<Function> fn = info[0].As<Function>();
   PdfStreamInfo streaminfo;
   streaminfo.fn = fn;
   streaminfo.data = &closure->vec[0];
   streaminfo.len = closure->vec.size();
-=======
-  closure_t closure;
-  closure.data = static_cast<closure_t*>(canvas->backend()->closure())->data;
-  closure.len = static_cast<closure_t*>(canvas->backend()->closure())->len;
-  closure.fn = info[0].As<Function>();
-  closure.density = canvas->density;
->>>>>>> Fixed some issues with density
 
   Nan::TryCatch try_catch;
 
@@ -712,15 +704,9 @@ NAN_METHOD(Canvas::StreamJPEGSync) {
     return Nan::ThrowTypeError("callback function required");
 
   Canvas *canvas = Nan::ObjectWrap::Unwrap<Canvas>(info.This());
-<<<<<<< HEAD
   JpegClosure closure(canvas);
   parseJPEGArgs(info[0], closure);
   closure.cb.Reset(Local<Function>::Cast(info[1]));
-=======
-  closure_t closure;
-  closure.fn = Local<Function>::Cast(info[3]);
-  closure.density = canvas->density;
->>>>>>> Fixed some issues with density
 
   Nan::TryCatch try_catch;
   uint32_t bufsize = getSafeBufSize(canvas);
@@ -939,7 +925,6 @@ Canvas::resurface(Local<Object> canvas) {
   backend()->recreateSurface();
 
   // Reset context
-<<<<<<< HEAD
 	context = Nan::Get(canvas, Nan::New<String>("context").ToLocalChecked()).ToLocalChecked();
 	if (!context->IsUndefined()) {
 		Context2d *context2d = ObjectWrap::Unwrap<Context2d>(Nan::To<Object>(context).ToLocalChecked());
@@ -948,15 +933,6 @@ Canvas::resurface(Local<Object> canvas) {
 		context2d->resetState();
 		cairo_destroy(prev);
 	}
-=======
-  context = canvas->Get(Nan::New<String>("context").ToLocalChecked());
-  if (!context->IsUndefined()) {
-    Context2d *context2d = ObjectWrap::Unwrap<Context2d>(context->ToObject());
-    cairo_t *prev = context2d->context();
-    context2d->setContext(cairo_create(surface()));
-    cairo_destroy(prev);
-  }
->>>>>>> Fixed some issues with density
 }
 
 /**

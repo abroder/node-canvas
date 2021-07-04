@@ -80,6 +80,7 @@ Canvas::Initialize(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
 
   // Class methods
   Nan::SetMethod(ctor, "_registerFont", RegisterFont);
+  Nan::SetMethod(ctor, "_deregisterAllFonts", DeregisterAllFonts);
 
   Local<Context> ctx = Nan::GetCurrentContext();
   Nan::Set(target,
@@ -302,6 +303,7 @@ static void parsePNGArgs(Local<Value> arg, PngClosure& pngargs) {
   }
 }
 
+#ifdef HAVE_JPEG
 static void parseJPEGArgs(Local<Value> arg, JpegClosure& jpegargs) {
   // "If Type(quality) is not Number, or if quality is outside that range, the
   // user agent must use its default quality value, as if the quality argument
@@ -331,12 +333,7 @@ static void parseJPEGArgs(Local<Value> arg, JpegClosure& jpegargs) {
     }
   }
 }
-
-static uint32_t getSafeBufSize(Canvas* canvas) {
-  // Don't allow the buffer size to exceed the size of the canvas (#674)
-  // TODO not sure if this is really correct, but it fixed #674
-  return (std::min)(canvas->getWidth() * canvas->getHeight() * 4, static_cast<int>(PAGE_SIZE));
-}
+#endif
 
 #if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 16, 0)
 
@@ -622,6 +619,9 @@ streamPDF(void *c, const uint8_t *data, unsigned len) {
   Nan::HandleScope scope;
   Nan::AsyncResource async("canvas:StreamPDF");
   PdfStreamInfo* streaminfo = static_cast<PdfStreamInfo*>(c);
+  // TODO this is technically wrong, we're returning a pointer to the data in a
+  // vector in a class with automatic storage duration. If the canvas goes out
+  // of scope while we're in the handler, a use-after-free could happen.
   Local<Object> buf = Nan::NewBuffer(const_cast<char *>(reinterpret_cast<const char *>(data)), len, stream_pdf_free, 0).ToLocalChecked();
   Local<Value> argv[3] = {
       Nan::Null()
@@ -698,6 +698,11 @@ NAN_METHOD(Canvas::StreamPDFSync) {
  */
 
 #ifdef HAVE_JPEG
+static uint32_t getSafeBufSize(Canvas* canvas) {
+  // Don't allow the buffer size to exceed the size of the canvas (#674)
+  // TODO not sure if this is really correct, but it fixed #674
+  return (std::min)(canvas->getWidth() * canvas->getHeight() * 4, static_cast<int>(PAGE_SIZE));
+}
 
 NAN_METHOD(Canvas::StreamJPEGSync) {
   if (!info[1]->IsFunction())
@@ -717,7 +722,6 @@ NAN_METHOD(Canvas::StreamJPEGSync) {
   }
   return;
 }
-
 #endif
 
 char *
@@ -771,6 +775,7 @@ NAN_METHOD(Canvas::RegisterFont) {
       FontFace face;
       face.user_desc = user_desc;
       face.sys_desc = sys_desc;
+      strncpy((char *)face.file_path, (char *) *filePath, 1023);
       font_face_list.push_back(face);
     } else {
       pango_font_description_free(user_desc);
@@ -784,6 +789,20 @@ NAN_METHOD(Canvas::RegisterFont) {
   g_free(family);
   g_free(weight);
   g_free(style);
+}
+
+NAN_METHOD(Canvas::DeregisterAllFonts) {
+  // Unload all fonts from pango to free up memory
+  bool success = true;
+  
+  std::for_each(font_face_list.begin(), font_face_list.end(), [&](FontFace& f) {
+    if (!deregister_font( (unsigned char *)f.file_path )) success = false;
+    pango_font_description_free(f.user_desc);
+    pango_font_description_free(f.sys_desc);
+  });
+  
+  font_face_list.clear();
+  if (!success) Nan::ThrowError("Could not deregister one or more fonts");
 }
 
 /*
@@ -856,12 +875,6 @@ Canvas::GetWeightFromCSSString(const char *weight) {
   }
 
   return w;
-}
-
-bool streq_casein(std::string& str1, std::string& str2) {
-  return str1.size() == str2.size() && std::equal(str1.begin(), str1.end(), str2.begin(), [](char& c1, char& c2) {
-    return c1 == c2 || std::toupper(c1) == std::toupper(c2);
-  });
 }
 
 /*
